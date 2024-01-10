@@ -179,15 +179,19 @@ main() # Imprime 1
 Es interesante observar que esto no requiere agregar funcionalidades fundamentalmente
 nuevas al lenguaje, ya que en efecto
 `$x = expr` se convierte, por medio de un procedimiento de _desugaring_,
-en `at $(now()): x = $(expr)`.
+en:
+```
+at $(now()):
+  x = $(expr)
+```
 
 ## Viajes al futuro
 
-El ejemplo anterior ilustra que los programas pueden viajar al pasado, usando
+El primer ejemplo ilustra que los programas pueden viajar al pasado, usando
 el comando `at t: ...`, con una variable `t` que referencia un instante del pasado.
 ¿Podríamos viajar también al futuro? A primera vista esto no parece posible, ya que deberíamos
 contar con una variable `t_futuro` que referencie un instante del futuro.
-Pero esto es posible con la siguiente técnica, que viaja al presente desde el futuro
+Pero esto es posible con la siguiente técnica, que "viaja al presente" desde el futuro
 para establecer el valor de `t_futuro`:
 ```
 t_pasado = now()
@@ -198,4 +202,113 @@ print("...Pasan muchos años...")
 at t_pasado:
   t_futuro = $(now())
 ```
+
+## Ideas de implementación y paradojas temporales
+
+La implementación del intérprete de Mariposa se basa en las siguientes ideas, con diversas excepciones e imperfecciones:
+* El intérprete conoce una "línea de tiempo" que establece un orden total sobre el conjunto de todos los instantes conocidos. Cada vez que se invoca a la primitiva `now()` se genera un nuevo instante. Además, otras instrucciones pueden generar nuevos instantes para mantener el orden secuencial de ejecución y posibilitar viajes en el tiempo. Los instantes están identificados por un número que sólo hace las veces de identificador, pero no está necesariamente relacionado con el orden cronológico relativo.
+* Las variables locales están ligadas a direcciones de memoria. La memoria está indexada por posiciones de memoria e instantes. Cada celda de memoria contiene un valor. Los valores pueden ser valores _propios_ (booleanos, enteros, clausuras, tuplas, etc.) o valores _impropios_. Un valor impropio es un par `(addr, i)` que representa el contenido de la celda de memoria en la dirección `addr` en el instante `i`. Lo importante es que el valor de celda podría ser determinado en el futuro de la traza de ejecución.
+* El intérprete manipula indistintamente valores propios o impropios, hasta el momento en el que una operación de entrada/salida o una operación de flujo de control depende de observar un valor impropio. En ese momento, se efectúa la _resolución_ del valor impropio para convertirlo en un valor propio. La resolución de un valor impropio `(addr, i)` consiste en mirar el valor de la celda de memoria en la dirección `addr` en todos los instantes cronológicamente anteriores a `i`, tomando el valor más reciente.
+* Una vez que el valor impropio `(addr, i)` fue resuelto, su valor estará dado por el que había en la dirección `addr` en un instante `j` con `j` anterior o igual a `i`. Esto _inhabilita_ la posibilidad de mutar todas las celdas de memoria en la dirección `addr` con instantes comprendidos entre `j` e `i`.
+* Las operaciones de entrada/salida (`input`/`print`) se registran en una cola de eventos que se _flushea_ recién cuando finaliza el programa, por orden cronológico dependiendo en el instante en el que ocurrieron. Esto permite que las operaciones de entrada/salida se emitan en desorden a lo largo de la ejecución. Una excepción a esta regla es la siguiente: cuando se resuelve un valor impropio que depende de una operación de lectura, se efectúan todas las operaciones pendientes de E/S hasta ese instante, y se _inhabilitan_ las operaciones de lectura hacia el pasado.
+
+## Paradojas temporales
+
+La asignación de una variable corresponde a la mutación del valor contenido en una celda.
+Los viajes en el tiempo pueden afectar parcialmente el flujo de control:
+```
+def main():
+  flag = True
+  t = now()
+  if flag:
+	print("elefante")
+  else:
+	print("mariposa")
+  at t:
+	flag = False
+
+main() # Imprime mariposa
+```
+Sin embargo, si el flujo de control depende de un valor y se lo trata de modificar,
+esto conduce a una paradoja temporal:
+```
+def main():
+  flag = True
+  t = now()
+  if flag:
+	at t:
+	  flag = False
+
+main() # ERROR: Assignment would lead to time paradox.
+```
+
+También se produce una paradoja temporal si se trata de modificar un valor que
+depende de sí mismo:
+```
+def main():
+  x = 1
+  t = now()
+  at t:
+    x = $x + 1
+  print(x)
+
+main() # ERROR: Time paradox: value depends on itself.
+```
+
+Sin embargo, sí es legítimo producir una estructura de datos cíclica:
+```
+def main():
+  x = 1
+  t = now()
+  at t:
+    x = [$x, $x]
+  print(len(x))
+
+main() # Imprime 2
+       # (El valor final de x es un árbol binario infinito)
+```
+
+## Inversión de tiempos
+
+Una característica interesante de Mariposa es que permite manipular instantes
+dentro de estructuras de datos.
+En el siguiente ejemplo se crea una lista de instantes
+`[now(), now(), now(), now(), now()]`.
+Los instantes están ordenados cronológicamente porque la evaluación
+en Mariposa procede de izquierda a derecha.
+Se invierte la lista, y se produce un efecto en cada uno de los instantes
+contenidos en la lista.
+```
+def reverse(list):
+  res = []
+  for x in list:
+    res = [x] + res
+  res
+
+i = 0
+for t in reverse([now(), now(), now(), now(), now()]):
+  at t:
+    print($i)
+  i = i + 1
+```
+Esto produce como resultado:
+```
+4
+3
+2
+1
+0
+```
+
+## La técnica del valor futuro (FutureValue)
+
+## Encadenamiento de tiempos
+
+## Semántica y corrección de la implementación
+
+No es evidente cómo se le podría dar una semántica formal al lenguaje Mariposa.
+Dado que no hay una especificación de su semántica,
+ni siquiera tiene sentido preguntarse si la implementación es correcta o incorrecta.
+Sin embargo, estamos seguros de que la implementación es incorrecta para casi cualquier
+semántica concebible. Debe entenderse sólo como un juego exploratorio.
 
