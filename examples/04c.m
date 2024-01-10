@@ -1,4 +1,4 @@
-# Example due to mega
+
 # Multiple time travelers error
 t = now()
 at t:

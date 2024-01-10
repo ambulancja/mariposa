@@ -1,4 +1,3 @@
-# Example due to mega
 
 t = now(), x, now(), y
 at t[0]:

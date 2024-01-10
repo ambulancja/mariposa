@@ -1,6 +1,4 @@
 
-# Example due to mega
-
 x = 0
 t = x, now()
 at t[1]:

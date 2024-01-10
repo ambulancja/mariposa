@@ -1,4 +1,3 @@
-# Improved by mega
 
 def FutureValue():
   x = 0
