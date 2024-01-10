@@ -309,7 +309,7 @@ def main():
   z = (now(), x)
   print(z[1])
   at z[0]:
-	x = 1
+    x = 1
 
 main() # Imprime 1
 ```
@@ -366,8 +366,8 @@ vez al mismo instante:
 def main():
   t = now()
   for i in range(10):
-	at t:
-	  print($i)
+    at t:
+      print($i)
 
 main() # ERROR: Multiple travelers to single point in time.
 ```
@@ -378,9 +378,9 @@ En cambio, el siguiente programa funciona, usando la técnica de encadenamiento:
 def main():
   t = now()
   for i in range(10):
-	at t:
-	  print($i)
-	  $t = now()
+    at t:
+      print($i)
+      $t = now()
 
 main() # Imprime 0 1 ... 9
 ```
