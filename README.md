@@ -203,7 +203,7 @@ at t_pasado:
   t_futuro = $(now())
 ```
 
-## Ideas de implementación y paradojas temporales
+## Ideas detrás de la implementación
 
 La implementación del intérprete de Mariposa se basa en las siguientes ideas, con diversas excepciones e imperfecciones:
 * El intérprete conoce una "línea de tiempo" que establece un orden total sobre el conjunto de todos los instantes conocidos. Cada vez que se invoca a la primitiva `now()` se genera un nuevo instante. Además, otras instrucciones pueden generar nuevos instantes para mantener el orden secuencial de ejecución y posibilitar viajes en el tiempo. Los instantes están identificados por un número que sólo hace las veces de identificador, pero no está necesariamente relacionado con el orden cronológico relativo.
@@ -345,10 +345,121 @@ main() # Imprime 1
 En el programa de arriba, se crea un valor futuro `f`, se muestra su valor futuro
 y recién entonces se le otorga el valor `1`.
 Esta técnica está limitada a otorgarle valor a lo sumo una vez. Es decir,
-si se invoca dos veces a `set(f, ...)` se obtendrá el error
+si se invoca más de una vez a `set(f, ...)` se obtendrá el error
 `Multiple travelers to single point in time`.
 
 ## Encadenamiento de tiempos
+
+No es posible viajar más de una vez al mismo instante en el tiempo.
+Sin embargo, es posible hacer un viaje en el tiempo al instante `t`
+para hacer ciertas acciones
+pero _además_ aprovechar el viaje
+para modificar el valor de `t` en el marco de tiempo padre,
+como quien encadena puntos en un tejido,
+para que refiera a un nuevo instante que podrá ser el destino de futuros
+viajes.
+
+Por ejemplo, el siguiente programa falla porque pretende viajar más de una
+vez al mismo instante:
+
+```
+def main():
+  t = now()
+  for i in range(10):
+	at t:
+	  print($i)
+
+main() # ERROR: Multiple travelers to single point in time.
+```
+
+En cambio, el siguiente programa funciona, usando la técnica de encadenamiento:
+
+```
+def main():
+  t = now()
+  for i in range(10):
+	at t:
+	  print($i)
+	  $t = now()
+
+main() # Imprime 0 1 ... 9
+```
+
+Un hecho curioso es que el mismo encadenamiento puede hacerse _hacia el pasado_:
+
+```
+def main():
+  t = now()
+  for i in range(10):
+    at t:
+      $t = now()
+      print($i)
+
+main() # Imprime 9 ... 1 0
+```
+
+Usando la técnica de encadenamiento, se puede definir una versión mejorada de la
+técnica de valores futuros, que permite invocar a `set(f, ...)` un número indefinido
+de veces:
+
+```
+def FutureValue():
+  x = None
+  [now(), x]
+
+def get(future):
+  future[1]
+
+def set(future, value):
+  at future[0]:
+    x = $value
+    $(future[0]) = now()
+
+def main():
+  f = FutureValue()
+  print(get(f))
+  for i in range(10):
+    set(f, i)
+
+main() # Imprime 9
+```
+
+## Características implementadas (con bugs)
+
+* Primitivas para viajes en el tiempo: `now()`, `at..` y `$(...)`.
+* `def` con número fijo de parámetros.
+* `print` e `input`.
+* Booleanos (`True`, `False`) con operaciones lógicas (`and`, `or`, `not`).
+* Números enteros con operaciones aritméticas (`+`, `-`, `*`, `/`, `%`, `**`). La división es entera.
+* Operadores relacionales (`==`, `!=`, `<`, `<=`, `>`, `>=`).
+* Strings de simple y multi-línea con escapes de caracteres especiales y hexadecimales.
+* Strings, tuplas inmutables y listas mutables implementan `len` e indexación, con índices posiblemente negativos.
+* Asignación _destructuring_ cuyo LHS puede incluir tuplas y listas (e.g. `x, y = y, x`).
+* `if..elif..elif..else..`
+* `while`
+* `for..in..` sobre strings, tuplas y listas. Se traduce a un `while` por medio del proceso de _desugaring_.
+* `range(n)` con un único parámetro. Devuelve una lista como en el viejo Python 2.
+
+## Características pendientes o no implementadas
+
+* `return`, `break`, `continue`: habría que reescribir el intérprete en CPS.
+* `at` al nivel de las expresiones, `x@t`
+* `__getitem__` y `__setitem__` actualmente fuerzan la resolución de los valores que toman como argumento, podrían hacerse _lazy_.
+* `range` con más de un argumento.
+* El `if` y el `while` actualmente no se comportan de manera uniforme. El `if` se posterga sin forzar la resolución de la condición, en tanto que el `while` siempre fuerza la resolución de la condición. Esto es arbitrario, y podría hacerse de otras maneras.
+* Diccionarios y conjuntos.
+* Clases, objetos,
+* Notaciones `x += 1`, `x -= 1`, etc.
+* Feteado de listas (_slices_).
+* Listas por comprensión.
+* Generators.
+* Archivos.
+* Excepciones.
+* Números de punto flotante.
+* Operaciones _bitwise_.
+* Escapes decimales y octales en strings.
+* Módulos.
+* (Etcétera).
 
 ## Semántica y corrección de la implementación
 
