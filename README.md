@@ -1,6 +1,6 @@
 # Mariposa: programas que viajan en el tiempo
 
-Mariposa es un lenguaje de programación de juguete minimalista inspirado en Python y destinado a explorar la posibilidad de los programas tengan la capacidad de "viajar en el tiempo".
+Mariposa es un lenguaje de programación de juguete minimalista inspirado en Python y destinado a explorar la posibilidad de que los programas tengan la capacidad de "viajar en el tiempo".
 
 ## Viajes al pasado
 
