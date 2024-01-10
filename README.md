@@ -221,11 +221,11 @@ def main():
   flag = True
   t = now()
   if flag:
-	print("elefante")
+    print("elefante")
   else:
-	print("mariposa")
+    print("mariposa")
   at t:
-	flag = False
+    flag = False
 
 main() # Imprime mariposa
 ```
@@ -236,8 +236,8 @@ def main():
   flag = True
   t = now()
   if flag:
-	at t:
-	  flag = False
+    at t:
+      flag = False
 
 main() # ERROR: Assignment would lead to time paradox.
 ```
@@ -301,6 +301,52 @@ Esto produce como resultado:
 ```
 
 ## La técnica del valor futuro (FutureValue)
+
+El siguiente programa imprime `1`:
+```
+def main():
+  x = 0
+  z = (now(), x)
+  print(z[1])
+  at z[0]:
+	x = 1
+
+main() # Imprime 1
+```
+En este programa `z` es una tupla que contiene un instante y
+un valor (ténicamente, un valor _impropio_), que corresponde al valor que se encuentre
+en la dirección de memoria a la que esté ligada la variable `x`.
+Es importante notar que el programa depende del hecho de que la evaluación en
+Mariposa procede de izquierda a derecha.
+
+Esta idea puede generalizarse a una técnica que permite crear un "valor futuro" `f`
+con una operación `get(f)` que devuelve el valor que le será dado a `f` en algún
+momento del futuro y una operación `set(f, x)` que le otorga el valor `x` a `f`:
+
+```
+def FutureValue():
+  x = 0
+  (now(), x)
+
+def set(future, value):
+  at future[0]:
+    x = $value
+
+def get(future):
+  future[1]
+
+def main():
+  f = FutureValue()
+  print(get(f))
+  set(f, 1)
+
+main() # Imprime 1
+```
+En el programa de arriba, se crea un valor futuro `f`, se muestra su valor futuro
+y recién entonces se le otorga el valor `1`.
+Esta técnica está limitada a otorgarle valor a lo sumo una vez. Es decir,
+si se invoca dos veces a `set(f, ...)` se obtendrá el error
+`Multiple travelers to single point in time`.
 
 ## Encadenamiento de tiempos
 
