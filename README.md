@@ -1,10 +1,10 @@
-# Mariposa: programas que viajan en el tiempo
+# Mariposa: programs that travel in time
 
-Mariposa es un lenguaje de programación de juguete minimalista inspirado en Python y destinado a explorar la posibilidad de que los programas tengan la capacidad de "viajar en el tiempo".
+Mariposa is a tiny toy programming language inspired by Python and intended to explore the possibility of programs having the ability to "travel in time".
 
-## Viajes al pasado
+## Travelling to the past
 
-Un ejemplo básico es el siguiente programa, que viaja al pasado:
+A basic example is the following program, which travels back in time:
 ```
 x = 1
 t = now()
@@ -12,19 +12,13 @@ print(x)
 at t:
   x = 2
 ```
-La variable `x` comienza tomando el valor `1`.
-A continuación se guarda en la variable local `t` el valor del instante actual, usando la función primitiva `now()`.
-Luego se imprime el valor de `x`. En un lenguaje de programación usual, esto haría que se imprima la cadena `1` en la salida estándar.
-Sin embargo, en Mariposa, existe la posibilidad de que el programa viaje atrás en el tiempo y modifique el valor de `x`. El comando `at t: <bloque>` ejecuta el bloque de código en el instante indicado por `t`. El efecto de este comando es equivalente a modificar el valor de `x` después de la instrucción `t = now()` pero antes de la instrucción `print(x)`.
-El resultado de ejecutar el programa es, entonces:
+The variable `x` starts taking the value `1`. The value of the current instant is then saved in the local variable `t`, using the primitive function `now()`. The value of `x` is then printed. In a typical programming language, this would print the string `1` to standard output. However, in Mariposa, there is a possibility for the program to travel back in time and modify the value of `x`. The command `at t: <block>` executes the code block at the time indicated by `t`. The effect of this command is equivalent to modifying the value of `x` after the `t = now()` statement but before the `print(x)` statement. The result of running the program is then:
 ```
 $ mariposa examples/01.m
 2
 ```
 
-No es necesario que el instante devuelto por la operación `now()` se utilice como destino
-de un viaje en el tiempo.
-Sin embargo, no es posible viajar más de una vez al mismo instante:
+It is not necessary for the instant returned by the `now()` operation to be used as the destination of time travel. However, it is not possible to travel more than once at the same time:
 ```
 def main():
   t = now()
@@ -36,10 +30,9 @@ def main():
 main() # ERROR: Multiple travelers to single point in time.
 ```
 
-## El instante captura el entorno actual
+## Instants capture the current environment
 
-El siguiente es un ejemplo de una función `f` que modifica el valor de la variable `x`
-en el instante `t` recibido como parámetro:
+The following is an example of a function `f` that modifies the value of the variable `x` at time `t` received as parameter:
 ```
 def f(t):
   at t:
@@ -51,23 +44,11 @@ def main():
   print(x)
   f(t)
 
-main() # Imprime 2
+main() # Prints 2
 ```
-El efecto de este programa es similar al de más arriba, es decir, imprime `2` en pantalla.
-Cualquierx lectorx que haya desarrollado cierta sensibilidad sobre lenguajes de programación
-observará que la asignación `x = 2` está estáticamente por fuera del alcance de la declaración
-de la variable `x`.
-Como decisión, muy cuestionable, de diseño, en Mariposa el instante actual que
-devuelve la primitiva `now()` captura el entorno actual,
-y el comando `at t: ...` "reabre" el entorno capturado de manera dinámica.
+The effect of this program is similar to the one above, that is, it prints `2` on the screen. Any reader who has a sensitivity about programming languages will have noticed that the assignment `x = 2` is statically outside the scope of the declaration of the variable `x`. As a very questionable design decision, in Mariposa the current instant returned by the `now()` primitive captures the current environment, and the command `at t: ...` "reopens" the dynamically captured environment.
 
-Una limitación de la implementación actual de Mariposa, que podría subsanarse en futuras
-versiones del lenguaje, es que las variables asignadas dentro de un bloque `at t: ...`
-deben ser necesariamente variables que se encuentren declaradas en el entorno capturado
-en el instante `t`. (Se consideran variables declaradas a todas aquellas que se encuentren
-en el lado izquierdo de una asignación).
-Por ejemplo, el siguiente programa produce un error, indicando que la variable `x` no
-se encuentra declarada:
+A limitation of the current implementation of Mariposa, which could be improved in future versions of the language, is that variables assigned within an `at t:...` block must necessarily be variables that are declared in the captured environment. Declared variables are considered to be all those that are on the left side of an assignment. For example, the following program produces an error, indicating that the variable `x` is not declared:
 ```
 def f(t):
   at t:
@@ -81,11 +62,9 @@ def main():
 main() # ERROR: Unbound variable: x
 ```
 
-## Lectura de valores del marco temporal padre
+## Reading from the parent time frame
 
-En un ejemplo como el anterior, podríamos querer hacer una asignación `x = y`
-donde `y` es algún valor computado dentro de la función `f` pero fuera del `at`.
-Podríamos tratar de escribir esto, con la intención de darle a `x` el valor `2`:
+In an example like the one above, we might want to make an assignment `x = y`, where `y` is some value computed inside the function `f` but outside of the `at` command. One could attempt the following code, with the aim of giving `x` the value `2`:
 ```
 def f(t):
   y = 2
@@ -100,17 +79,7 @@ def main():
 
 main() # ERROR: Unbound variable: y
 ```
-Sin embargo, este programa produce un error, indicando que la variable `y` no
-se encuentra declarada, ya que el cuerpo del bloque `at t: ...` se ejecuta en el
-entorno de la función `main`, que no incluye una declaración para `y`.
-Para solucionar esto se puede escribir `$y`, que se refiere al valor que tiene `y`
-antes de comenzar la ejecución del bloque `at` (es decir, "antes de iniciar el viaje
-en el tiempo").
-En general, Mariposa cuenta con una pila de marcos temporales.
-Cada vez que se inicia la ejecución de un bloque `at` se ingresa en
-un marco temporal anidado.
-Si `expr` es una expresión arbitraria, `$(expr)` denota el valor de la expresión
-en el marco temporal padre. Así, se tiene que:
+However, this produces an error, indicating that the variable `y` is not declared, as the body of the `at t: ...` block is executed in the environment of the `main` function, which does not include a declaration for `and`. To solve this, one can write `$y`, which refers to the value of `y` before starting the execution of the `at` block (i.e. "before stepping into the time machine"). In general, Mariposa has a stack of time frames. Every time the execution of an `at` block starts, it is entered into a nested time frame. If `expr` is an arbitrary expression, `$(expr)` denotes the value of the expression in the parent time frame. Thus, we have:
 ```
 def f(t):
   y = 2
@@ -123,10 +92,10 @@ def main():
   print(x)
   f(t)
 
-main() # Imprime 2
+main() # Prints 2
 ```
 
-Se puede utilizar el operador `$` de manera anidada:
+The `$` operator can be used in a nested manner:
 ```
 def g(t2):
   y = 2
@@ -144,11 +113,11 @@ def main():
   print(x)
   f(t1)
 
-main() # Imprime 2
+main() # Prints 2
 ```
 
-Sin embargo, no es posible salir fuera del marco temporal de origen, que es el
-que da inicio a la ejecución del programa:
+However, it is not possible to exit outside the original time frame, which is the
+which starts the execution of the program:
 ```
 def main():
   print($1)
@@ -156,16 +125,16 @@ def main():
 main() # ERROR: Cannot refer to time outside the origin.
 ```
 
-## Escritura a valores del marco temporal padre
+## Writing to parent time frames
 
-Las variables del marco temporal padre también se pueden escribir, usando la
-sintaxis `$x = expr`:
+Variables from the parent timeframe can also be written, using the
+syntax `$x = expr`:
 ```
 def f(t):
   y = 3
   at t:
     $y = x
-  print(y)
+    print(y)
 
 def main():
   x = 1
@@ -173,64 +142,61 @@ def main():
   x = 2
   f(t)
 
-main() # Imprime 1
+main() # Prints 1
 ```
 
-Es interesante observar que esto no requiere agregar funcionalidades fundamentalmente
-nuevas al lenguaje, ya que en efecto
-`$x = expr` se convierte, por medio de un procedimiento de _desugaring_,
-en:
+It is interesting to note that this does not require adding functionalities fundamentally new to the language as, in fact, `$x = expr` is converted, by means of a _desugaring_ procedure, to:
 ```
 at $(now()):
   x = $(expr)
 ```
 
-## Viajes al futuro
+## Travelling to the future
 
-El primer ejemplo ilustra que los programas pueden viajar al pasado, usando
-el comando `at t: ...`, con una variable `t` que referencia un instante del pasado.
-¿Podríamos viajar también al futuro? A primera vista esto no parece posible, ya que deberíamos
-contar con una variable `t_futuro` que referencie un instante del futuro.
-Pero esto es posible con la siguiente técnica, que "viaja al presente" desde el futuro
-para establecer el valor de `t_futuro`:
-```
-t_pasado = now()
-print("Estamos en el presente")
-at t_futuro:
-  print("Código que se ejecutará en el futuro")
-print("...Pasan muchos años...")
-at t_pasado:
-  t_futuro = $(now())
-```
-
-## Ideas detrás de la implementación
-
-La implementación del intérprete de Mariposa se basa en las siguientes ideas, con diversas excepciones e imperfecciones:
-* El intérprete conoce una "línea de tiempo" que establece un orden total sobre el conjunto de todos los instantes conocidos. Cada vez que se invoca a la primitiva `now()` se genera un nuevo instante. Además, otras instrucciones pueden generar nuevos instantes para mantener el orden secuencial de ejecución y posibilitar viajes en el tiempo. Los instantes están identificados por un número que sólo hace las veces de identificador, pero no está necesariamente relacionado con el orden cronológico relativo.
-* Las variables locales están ligadas a direcciones de memoria. La memoria está indexada por posiciones de memoria e instantes. Cada celda de memoria contiene un valor. Los valores pueden ser valores _propios_ (booleanos, enteros, clausuras, tuplas, etc.) o valores _impropios_. Un valor impropio es un par `(addr, i)` que representa el contenido de la celda de memoria en la dirección `addr` en el instante `i`. Lo importante es que el valor de celda podría ser determinado en el futuro de la traza de ejecución.
-* El intérprete manipula indistintamente valores propios o impropios, hasta el momento en el que una operación de entrada/salida o una operación de flujo de control depende de observar un valor impropio. En ese momento, se efectúa la _resolución_ del valor impropio para convertirlo en un valor propio. La resolución de un valor impropio `(addr, i)` consiste en mirar el valor de la celda de memoria en la dirección `addr` en todos los instantes cronológicamente anteriores a `i`, tomando el valor más reciente.
-* Una vez que el valor impropio `(addr, i)` fue resuelto, su valor estará dado por el que había en la dirección `addr` en un instante `j` con `j` anterior o igual a `i`. Esto _inhabilita_ la posibilidad de mutar todas las celdas de memoria en la dirección `addr` con instantes comprendidos entre `j` e `i`.
-* Las operaciones de entrada/salida (`input`/`print`) se registran en una cola de eventos que se _flushea_ recién cuando finaliza el programa, por orden cronológico dependiendo en el instante en el que ocurrieron. Esto permite que las operaciones de entrada/salida se emitan en desorden a lo largo de la ejecución. Una excepción a esta regla es la siguiente: cuando se resuelve un valor impropio que depende de una operación de lectura, se efectúan todas las operaciones pendientes de E/S hasta ese instante, y se _inhabilitan_ las operaciones de lectura hacia el pasado.
-
-## Paradojas temporales
-
-La asignación de una variable corresponde a la mutación del valor contenido en una celda.
-Los viajes en el tiempo pueden afectar parcialmente el flujo de control:
+The first example illustrates that programs can travel back in time, using the command `at t: ...`, with a variable `t` that references an instant in the past. Could we also travel to the future? At first glance this does not seem possible, since we should have a variable `t_future` that refers to an instant in the future. But this is possible with the following technique, which "travels to the present" from the future to set the value of `t_future`:
 ```
 def main():
-  flag = True
-  t = now()
-  if flag:
-    print("elefante")
-  else:
-    print("mariposa")
-  at t:
-    flag = False
+  t_past = now()
+  print("We are in the present")
+  at t_future:
+    print("We are in the future")
+  print("...Many years pass...")
+  at t_past:
+    t_future = $(now())
 
-main() # Imprime mariposa
+main()
+  # Prints:
+  #   We are in the present
+  #   ...Many years pass...
+  #   We are in the future
 ```
-Sin embargo, si el flujo de control depende de un valor y se lo trata de modificar,
-esto conduce a una paradoja temporal:
+
+## Ideas behind the implementation
+
+The Mariposa interpreter implementation is based on the following ideas, with various exceptions and imperfections:
+* The interpreter keeps a "timeline" that establishes a total order over the set of all known instants. Every time the `now()` primitive is called, a new instant is generated. Other instructions can also generate new instants to maintain the sequential order of execution and enable time travel. Instants are identified by a number that only serves as an identifier, and is not necessarily related to the relative chronological order.
+* Local variables are bound to memory addresses. Memory is indexed by a memory location and an instant. Each memory cell contains a value. Values can be _proper_ values (booleans, integers, closures, tuples, etc.) or _improper_ values. An improper value is a pair `(addr, i)`, representing the contents of the memory cell at address `addr` at time `i`. The thing to keep in mind here is that the value of the cell could be determined in the future of the execution trace.
+* The interpreter manipulates proper or improper values without distinction, until the time in which an input/output operation or a control flow operation depends on observing an improper value. At that point, _resolution_ of the improper value is performed to convert it into a proper value. Resolving an improper value `(addr, i)` consists of looking at the value of the memory cell at address `addr` at all times chronologically prior to `i`, taking the most recent value.
+* Once the improper value `(addr, i)` has been resolved, its value is given by the value at address `addr` at a certain point in time `j`, with `j` before or equal to `i`. This _disables_ the ability to mutate all memory cells at address `addr` with times between `j` and `i`.
+* Input/output operations (`input`/`print`) are registered in an event queue that is flushed only when the program ends, in chronological order depending on the instant in which they occurred. This allows input/output operations to be issued out of order throughout the execution. An exception to this rule is the following: when an improper value that depends on a read operation is resolved, all pending I/O operations up to that point are performed, and read operations backward are _disabled_.
+
+## Temporal paradoxes
+
+The assignment of a variable corresponds to the mutation of the value contained in a cell. Time travel can partially affect the flow of control:
+```
+def main():
+flag = True
+t = now()
+if flag:
+  print("elephant")
+else:
+  print("butterfly")
+at t:
+  flag = False
+
+main() # Prints "butterfly"
+```
+However, if the control flow depends on a value and one tries to modify it, this leads to a temporal paradox:
 ```
 def main():
   flag = True
@@ -242,8 +208,7 @@ def main():
 main() # ERROR: Assignment would lead to time paradox.
 ```
 
-También se produce una paradoja temporal si se trata de modificar un valor que
-depende de sí mismo:
+A temporal paradox also occurs if one tries to modify a value that depends on itself:
 ```
 def main():
   x = 1
@@ -255,7 +220,7 @@ def main():
 main() # ERROR: Time paradox: value depends on itself.
 ```
 
-Sin embargo, sí es legítimo producir una estructura de datos cíclica:
+However, it is legitimate to produce a cyclic data structure:
 ```
 def main():
   x = 1
@@ -264,20 +229,13 @@ def main():
     x = [$x, $x]
   print(len(x))
 
-main() # Imprime 2
-       # (El valor final de x es un árbol binario infinito)
+main() # Prints 2
+       # (The final value of x is an infinite binary tree)
 ```
 
-## Inversión de tiempos
+## Time investment
 
-Una característica interesante de Mariposa es que permite manipular instantes
-dentro de estructuras de datos.
-En el siguiente ejemplo se crea una lista de instantes
-`[now(), now(), now(), now(), now()]`.
-Los instantes están ordenados cronológicamente porque la evaluación
-en Mariposa procede de izquierda a derecha.
-Se invierte la lista, y se produce un efecto en cada uno de los instantes
-contenidos en la lista.
+An interesting feature of Mariposa is that it allows to manipulate instants within data structures. The following example creates a list of instants `[now(), now(), now(), now(), now()]`. The instants are ordered chronologically because evaluation in Mariposa proceeds from left to right. The list is inverted, and an effect is produced at each instant contained in the list.
 ```
 def reverse(list):
   res = []
@@ -291,7 +249,7 @@ for t in reverse([now(), now(), now(), now(), now()]):
     print($i)
   i = i + 1
 ```
-Esto produce como resultado:
+This produces as a result:
 ```
 4
 3
@@ -300,9 +258,9 @@ Esto produce como resultado:
 0
 ```
 
-## La técnica del valor futuro (FutureValue)
+## The future value technique
 
-El siguiente programa imprime `1`:
+The following program prints `1`:
 ```
 def main():
   x = 0
@@ -311,17 +269,11 @@ def main():
   at z[0]:
     x = 1
 
-main() # Imprime 1
+main() # Prints 1
 ```
-En este programa `z` es una tupla que contiene un instante y
-un valor (ténicamente, un valor _impropio_), que corresponde al valor que se encuentre
-en la dirección de memoria a la que esté ligada la variable `x`.
-Es importante notar que el programa depende del hecho de que la evaluación en
-Mariposa procede de izquierda a derecha.
+In this snippet, `z` is a tuple containing an instant and a value (technically, an _improper_ value), which corresponds to the value found in the memory address to which the variable `x` is bound. It is important to note that the program depends on the fact that the evaluation in Mariposa proceeds from left to right.
 
-Esta idea puede generalizarse a una técnica que permite crear un "valor futuro" `f`
-con una operación `get(f)` que devuelve el valor que le será dado a `f` en algún
-momento del futuro y una operación `set(f, x)` que le otorga el valor `x` a `f`:
+This idea can be generalized to a technique that allows creating a "future value" `f`, with a `get(f)` operation that returns the value that will be given to `f` at some point in the future, and a `set(f, x)` operation that gives the value `x` to `f`:
 
 ```
 def FutureValue():
@@ -340,27 +292,15 @@ def main():
   print(get(f))
   set(f, 1)
 
-main() # Imprime 1
+main() # Prints 1
 ```
-En el programa de arriba, se crea un valor futuro `f`, se muestra su valor futuro
-y recién entonces se le otorga el valor `1`.
-Esta técnica está limitada a otorgarle valor a lo sumo una vez. Es decir,
-si se invoca más de una vez a `set(f, ...)` se obtendrá el error
-`Multiple travelers to single point in time`.
+In the above program, a future value `f` is created, its future value is displayed and only then is it given the value `1`. This technique allows only to set a value for `f` at most once. If one calls `set(f, ...)` more than once, one gets the error `Multiple travelers to single point in time`.
 
-## Encadenamiento de tiempos
+## Time chaining
 
-No es posible viajar más de una vez al mismo instante en el tiempo.
-Sin embargo, es posible hacer un viaje en el tiempo al instante `t`
-para hacer ciertas acciones
-pero _además_ aprovechar el viaje
-para modificar el valor de `t` en el marco de tiempo padre,
-como quien encadena puntos en un tejido,
-para que refiera a un nuevo instante que podrá ser el destino de futuros
-viajes.
+It is not possible to travel more than once at the same instant in time. However, it is possible to travel through time to the `t` that perform certain actions and _also_ modify the value of `t` in the parent time frame, like when chaining stitches, so that it refers to a new instant that could be the destiny of future travels in time.
 
-Por ejemplo, el siguiente programa falla porque pretende viajar más de una
-vez al mismo instante:
+For example, the following program fails because it attempts to travel more than one time at the same instant:
 
 ```
 def main():
@@ -372,7 +312,7 @@ def main():
 main() # ERROR: Multiple travelers to single point in time.
 ```
 
-En cambio, el siguiente programa funciona, usando la técnica de encadenamiento:
+On the other hand, the following program works, using the chaining technique:
 
 ```
 def main():
@@ -382,10 +322,10 @@ def main():
       print($i)
       $t = now()
 
-main() # Imprime 0 1 ... 9
+main() # Prints 0 1 ... 9
 ```
 
-Un hecho curioso es que el mismo encadenamiento puede hacerse _hacia el pasado_:
+A curious remark is that the same chaining can be done _backwards_ (towards the past):
 
 ```
 def main():
@@ -395,12 +335,10 @@ def main():
       $t = now()
       print($i)
 
-main() # Imprime 9 ... 1 0
+main() # Prints 9 ... 1 0
 ```
 
-Usando la técnica de encadenamiento, se puede definir una versión mejorada de la
-técnica de valores futuros, que permite invocar a `set(f, ...)` un número indefinido
-de veces:
+Using the chaining technique, an improved version of the future values technique, which allows `set(f, ...)` to be invoked for an indefinite number times:
 
 ```
 def FutureValue():
@@ -421,51 +359,51 @@ def main():
   for i in range(10):
     set(f, i)
 
-main() # Imprime 9
+main() # Prints 9
 ```
 
-## Características implementadas (con bugs)
+## Features implemented (with bugs)
 
-* Primitivas para viajes en el tiempo: `now()`, `at..` y `$(...)`.
-* `def` con número fijo de parámetros.
-* `print` e `input`.
-* Booleanos (`True`, `False`) con operaciones lógicas (`and`, `or`, `not`).
-* Números enteros con operaciones aritméticas (`+`, `-`, `*`, `/`, `%`, `**`). La división es entera.
-* Operadores relacionales (`==`, `!=`, `<`, `<=`, `>`, `>=`).
-* Strings de simple y multi-línea con escapes de caracteres especiales y hexadecimales.
-* Strings, tuplas inmutables y listas mutables implementan `len` e indexación, con índices posiblemente negativos.
-* Asignación _destructuring_ cuyo LHS puede incluir tuplas y listas (e.g. `x, y = y, x`).
+* Time travel primitives: `now()`, `at..` and `$(...)`.
+* `def` with fixed number of parameters.
+* `print` and `input`.
+* Booleans (`True`, `False`) with logical operations (`and`, `or`, `not`).
+* Integers with arithmetic operations (`+`, `-`, `*`, `/`, `%`, `**`), with integer division.
+* Relational operators (`==`, `!=`, `<`, `<=`, `>`, `>=`).
+* Single and multi-line strings with escapes of special and hexadecimal characters.
+* Strings, immutable tuples, and mutable lists implementing `len` and indexing, with possibly negative indexes.
+* _destructuring_ assignment whose LHS can include tuples and lists (eg `x, y = y, x`).
 * `if..elif..elif..else..`
 * `while`
-* `for..in..` sobre strings, tuplas y listas. Se traduce a un `while` por medio del proceso de _desugaring_.
-* `range(n)` con un único parámetro. Devuelve una lista como en el viejo Python 2.
+* `for..in..` on strings, tuples and lists. Translated to a `while` by the desugaring process.
+* `range(n)` with a single parameter. Returns a list (as in old Python 2).
 
-## Características pendientes o no implementadas
+## Pending or unimplemented features
 
-* `return`, `break`, `continue`: habría que reescribir el intérprete en CPS.
-* `at` al nivel de las expresiones, `x@t`
-* `__getitem__` y `__setitem__` actualmente fuerzan la resolución de los valores que toman como argumento, podrían hacerse _lazy_.
-* `range` con más de un argumento.
-* El `if` y el `while` actualmente no se comportan de manera uniforme. El `if` se posterga sin forzar la resolución de la condición, en tanto que el `while` siempre fuerza la resolución de la condición. Esto es arbitrario, y podría hacerse de otras maneras.
-* Diccionarios y conjuntos.
-* Clases, objetos,
-* Notaciones `x += 1`, `x -= 1`, etc.
-* Feteado de listas (_slices_).
-* Listas por comprensión.
+* `return`, `break`, `continue` seem difficult, the interpreter would probably have to be rewritten in CPS.
+* `at` at the expression level, `x@t`.
+* `__getitem__` and `__setitem__` currently force resolution of the values they take as arguments, they could be made _lazy_.
+* `range` with more than one argument.
+* The `if` and `while` do not currently behave consistently. The `if` is deferred without forcing the resolution of the condition, while the `while` always forces the resolution of the condition. This is arbitrary, and could be done in other ways.
+* Dictionaries and sets.
+* Classes, objects,
+* Notations `x += 1`, `x -= 1`, etc.
+* Slicing of lists (_slices_).
+* List comprehensions.
 * Generators.
-* Archivos.
-* Excepciones.
-* Números de punto flotante.
-* Operaciones _bitwise_.
-* Escapes decimales y octales en strings.
-* Módulos.
-* (Etcétera).
+* Files.
+* Exceptions.
+* Floating point numbers.
+* _bitwise_ operations.
+* Decimal and octal escapes in strings.
+* Modules.
+* (Etc).
 
-## Semántica y corrección de la implementación
+## Semantics and correctness of implementation
 
-No es evidente cómo se le podría dar una semántica formal al lenguaje Mariposa.
-Dado que no hay una especificación de su semántica,
-ni siquiera tiene sentido preguntarse si la implementación es correcta o incorrecta.
-Sin embargo, estamos seguros de que la implementación es incorrecta para casi cualquier
-semántica concebible. Debe entenderse sólo como un juego exploratorio.
+It is not obvious how the Mariposa language could be given a formal semantics. Since there is no specification of its semantics, it doesn't even make sense to ask if the implementation is right or wrong. However, we are sure that the implementation is incorrect for almost any conceivable semantics. It should be understood only as an exploratory game.
+
+The implementation is currently inefficient and relies on a suboptimal data structure to operate with timelines. This could be improved.
+
+No bugs will be fixed in the future (but perhaps in the past).
 
