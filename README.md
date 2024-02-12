@@ -79,7 +79,7 @@ def main():
 
 main() # ERROR: Unbound variable: y
 ```
-However, this produces an error, indicating that the variable `y` is not declared, as the body of the `at t: ...` block is executed in the environment of the `main` function, which does not include a declaration for `and`. To solve this, one can write `$y`, which refers to the value of `y` before starting the execution of the `at` block (i.e. "before stepping into the time machine"). In general, Mariposa has a stack of time frames. Every time the execution of an `at` block starts, it is entered into a nested time frame. If `expr` is an arbitrary expression, `$(expr)` denotes the value of the expression in the parent time frame. Thus, we have:
+However, this produces an error, indicating that the variable `y` is not declared, as the body of the `at t: ...` block is executed in the environment of the `main` function, which does not include a declaration for `y`. To solve this, one can write `$y`, which refers to the value of `y` before starting the execution of the `at` block (i.e. "before stepping into the time machine"). In general, Mariposa has a stack of time frames. Every time the execution of an `at` block starts, it is entered into a nested time frame. If `expr` is an arbitrary expression, `$(expr)` denotes the value of the expression in the parent time frame. Thus, we have:
 ```
 def f(t):
   y = 2
